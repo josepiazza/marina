@@ -3,7 +3,7 @@ $ = jQuery;
 
 jQuery(document).ready( function(){
 	$("#btnBuscar").on('click', function(){  
-
+            $("#listaUsuarios").empty();
      //La llamada AJAX
        $.ajax({
            type : "get",
@@ -45,7 +45,7 @@ jQuery(document).ready( function(){
         matricula = validar_vacio("#matricula");
         tipo = validar_vacio("#tipo");
         if ( nombre && matricula && tipo ){
-            agregarCamposAlForm();
+//            agregarCamposAlForm();
             rta = true;
         }else{
             alert("Hay campos obligatorios incompletos.");
@@ -61,24 +61,30 @@ jQuery(document).ready( function(){
    var listaUsuarios = new Array();
    
    var agregarUsuario = function(id, texto){
-        $("#usuariosSeleccionados").append("<li id='usu_"+id+"'><button type='button' value='"+id +"' onClick='descartarUsuario( this )'>X</button>  "+texto+"</li>");
-        listaUsuarios.push(new Array( id )); 
+       
+        if( listaUsuarios.indexOf(id) == -1 ){
+//            alert( listaUsuarios.indexOf(id) );
+            $("#usuariosSeleccionados").append("<li id='usu_"+id+"'><button type='button' value='"+id +"' onClick='descartarUsuario( this )'>X</button>  "+texto+"</li>");
+            $("#formulariEmbarcacion").append( "<input type='hidden' name='usuarios[]' id='usuHidden_"+id+"' value='"+id+"' />" );
+//            listaUsuarios.push( id ); 
+        }
+
    };
    
    var descartarUsuario = function(boton){
        $("#usu_"+$( boton ).attr('value')).remove();
-       listaUsuarios.splice( listaUsuarios.indexOf( $( boton ).attr('value')), 1);
+       $("#usuHidden_"+$( boton ).attr('value')).remove();
+//       listaUsuarios.splice( listaUsuarios.indexOf( $( boton ).attr('value')), 1);
 
    };
    
    var agregarCamposAlForm = function(){
-       listaUsuarios
        
-       for(i=0; i<listaUsuarios.length; i++){
-           $("#formulariEmbarcacion").append( "<input type='hidden' name='usuarios[]' value='"+listaUsuarios[i]+"' />" );
-       }
        
-       $("#formulariEmbarcacion")
+//       for(i=0; i<listaUsuarios.length; i++){
+//           $("#formulariEmbarcacion").append( "<input type='hidden' name='usuarios[]' value='"+listaUsuarios[i]+"' />" );
+//       }
+       
    };
    
    var validar_vacio = function(campo){

@@ -23,6 +23,7 @@ class CHMarinaUsuario extends CHMarinaCore{
     protected $telefono;
     protected $user_id;
 
+    protected $error;
 
     public function guardar(){
         
@@ -31,14 +32,21 @@ class CHMarinaUsuario extends CHMarinaCore{
                     'user_email'=>$this->user_email, 
                     'user_pass'=>$this->dni,
         ];
-        $this->user_id = wp_insert_user($userdata);
+        $user_id = wp_insert_user($userdata);
         
-        if( !empty( $this->nombre ) ) update_user_meta( $this->user_id, 'first_name', sanitize_text_field( $this->nombre ) );
-        if( !empty( $this->apellido ) ) update_user_meta( $this->user_id, 'last_name', sanitize_text_field( $this->apellido ) );
+        if ( ! is_wp_error( $user_id ) ) {
+            $this->user_id = $user_id;
         
-        if( !empty( $this->dni ) ) update_user_meta( $this->user_id, 'dni', sanitize_text_field( $this->dni ) );
-        if( !empty( $this->telefono ) ) update_user_meta( $this->user_id, 'telefono', sanitize_text_field( $this->telefono ) );
-        
+            if( !empty( $this->nombre ) ) update_user_meta( $this->user_id, 'first_name', sanitize_text_field( $this->nombre ) );
+            if( !empty( $this->apellido ) ) update_user_meta( $this->user_id, 'last_name', sanitize_text_field( $this->apellido ) );
+
+            if( !empty( $this->dni ) ) update_user_meta( $this->user_id, 'dni', sanitize_text_field( $this->dni ) );
+            if( !empty( $this->telefono ) ) update_user_meta( $this->user_id, 'telefono', sanitize_text_field( $this->telefono ) );
+            return true;
+        }else{
+            $this->error = $user_id;
+            return false;
+        }
         
         
     }
@@ -189,6 +197,11 @@ class CHMarinaUsuario extends CHMarinaCore{
         $this->dni = $dni;
     }
 
+    function getError(){
+        var_dump($this->error);
+        return $this->error;
+    }
+    
     protected function get_campo_id() {
         return "id";
     }

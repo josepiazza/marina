@@ -23,7 +23,7 @@ class CHMarinaInicio {
     
     public function crearMenu(){
         
-        add_menu_page("CH_Marina", "Marina", "manage_options", "ch_marina_menu_administrador", [$this, "listado_marina" ]);
+        add_menu_page("CH_Marina", "Marina", "publish_pages", "ch_marina_menu_administrador", [$this, "listado_marina" ]);
 //        add_submenu_page("ch_marina_menu_administrador", "Embarcaciones", "Embarcaciones", "manage_options", "listado_marina", [$this, "listado_marina"]);
 
 
@@ -62,19 +62,36 @@ class CHMarinaInicio {
                 $this->formulario_embarcacion_admin();
                 break;
             case "procesar":
-                $this->procesar_alta($_REQUEST);
+                $id_embarcacion = $this->procesar_alta($_REQUEST);
+
+        
+                if( $_REQUEST["guardar"] == "guardar" ){        
+                    $this->formulario_agregar_usuario( $id_embarcacion );
+                }else{
+                    $this->mostrar_listado_embarcaciones();
+                }
+                
                 break;
             case "procesarUsuario":
                 
-                print $_REQUEST["guardar"];
-                $this->procesar_alta_usuario($_REQUEST);
-                
-                if($_REQUEST["guardar"] == "GuardarYSalir"){
-                    $this->mostrar_listado_embarcaciones();
+                if($_REQUEST["guardar"] != "Salir"){
+                    $guardarUsuariosRta = $this->procesar_alta_usuario($_REQUEST);
+                    if( ! is_wp_error( $guardarUsuariosRta ) ){
+
+                        if($_REQUEST["guardar"] == "GuardarYSalir"){
+                            $this->mostrar_listado_embarcaciones();
+                        }else if( $_REQUEST["guardar"] == "Guardar" ){
+                            $this->formulario_agregar_usuario( $_REQUEST["id_embarcacion"] );
+                        }else{
+
+                        }
+                    }else{
+                        $this->formulario_agregar_usuario( $id_embarcacion, $_REQUEST );
+                        print "<script> alert('".$guardarUsuariosRta->get_error_message()."'); </script>";
+                    }
                 }else{
-                    $this->formulario_agregar_usuario( $_REQUEST["id_embarcacion"] );
+                    $this->mostrar_listado_embarcaciones();
                 }
-                
                 break;
             case "edit":
                 switch( $_REQUEST["tbl"] ){
@@ -129,14 +146,7 @@ class CHMarinaInicio {
             }
             
         }
-//        else{
-//            $documento = ( ! empty( $_POST['documento'] ) ) ? sanitize_text_field( $_POST['documento'] ) : '';
-//            $localidad = ( ! empty( $_POST['localidad'] ) ) ? sanitize_text_field( $_POST['localidad'] ) : '';     
-//            $tituloPagina = ( ! empty( $_POST['$tituloPagina'] ) ) ? sanitize_text_field( $_POST['$tituloPagina'] ) : '';
-//            $descCorta = ( ! empty( $_POST['descCorta'] ) ) ? sanitize_text_field( $_POST['descCorta'] ) : '';     
-//            $contacto = ( ! empty( $_POST['contacto'] ) ) ? sanitize_text_field( $_POST['contacto'] ) : '';
-//            $descripcion = ( ! empty( $_POST['descripcion'] ) ) ? sanitize_text_field( $_POST['descripcion'] ) : '';      
-//        }
+
 
         ?>
 <div>
@@ -187,7 +197,7 @@ class CHMarinaInicio {
                 Buscar:<br/>
                 <input type="text" name="busqueda" id="textBusqueda">
                 <button name="buscar" id="btnBuscar" type="button" >Buscar</button><br/>
-                <select name="listaUsuarios" id="listaUsuarios" multiple  style="width: 200px">
+                <select name="listaUsuarios" id="listaUsuarios" multiple  style="width: 400px; height: 100px">
                     
                 </select>
 
@@ -206,18 +216,27 @@ class CHMarinaInicio {
         </script>
 
         
-        <p><button name="guardar" id="btnGuardar" >Guardar</button></p>
+        <p><button name="guardar" id="btnGuardar" value="guardar">Guardar</button></p>
+        <p><button name="guardar" id="btnGuardar" value="guardarysalir">Guardar y salir</button></p>
         </div>
         </form>
     </div>
         <?php
     }
     
-    public function formulario_agregar_usuario($id_embarcacion){
+    public function formulario_agregar_usuario($id_embarcacion, $reques = null){
+        
+        if( !empty($reques) ){
+            $nombre = $reques["nombre"];
+            $apellido = $reques["apellido"];
+            $dni = $reques["dni"];
+            $user_email = $reques["user_email"];
+            $telefono = $reques["telefono"];
+        }
        ?>
 <h2>Usuario</h2>
 <form action="?page=ch_marina_menu_administrador&modo=procesarUsuario" method="post">
-    <input type="text" name="id_embarcacion" value="<?php echo( $id_embarcacion ); ?>" />
+    <input type="hidden" name="id_embarcacion" value="<?php echo( $id_embarcacion ); ?>" />
         <p>
             <label for="nombre"><?php _e( 'Nombre' ) ?><br />
                 <input type="text" name="nombre" id="nombre" class="input" value="<?php echo esc_attr(  $nombre  ); ?>" size="25" /></label>
@@ -240,7 +259,7 @@ class CHMarinaInicio {
         </p>
         <p><input type="submit" name="guardar" value="Guardar" />
         <input type="submit" name="guardar" value="GuardarYSalir" />
-        <input type="button" value="Salir"/>
+        <input type="submit" name="guardar" value="Salir"/>
         </p>
 </form>        
 
@@ -272,7 +291,7 @@ class CHMarinaInicio {
                 $emb->agregarUsuario($user_id);
             }
         }
-        $this->formulario_agregar_usuario( $id_embarcacion );
+        return $id_embarcacion;
     }
     
     public function procesar_alta_usuario($post){
@@ -284,8 +303,12 @@ class CHMarinaInicio {
         $user->setUser_email ($post["user_email"]);
         $user->setTelefono ($post["telefono"]);
         
-        $user->guardar();
-        $user->agregar_embarcacion($post["id_embarcacion"]);
+        if( $user->guardar()){
+            $user->agregar_embarcacion($post["id_embarcacion"]);
+            return true;
+        }else{
+            return $user->getError();
+        }
     }
 }
 
