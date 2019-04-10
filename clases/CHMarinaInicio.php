@@ -123,6 +123,7 @@ class CHMarinaInicio {
     public function formulario_embarcacion_admin( $id_embacacion = null ){
         $emb = new CHMarinaEmbarcacion();
         $tipo_embarcacion = $emb->get_tipo_embarcacion();
+        $tipos_estado = $emb->get_tipos_estado();
         wp_enqueue_script( 'ch_marina', plugins_url( 'ch_marina/js/ch_marina.js'), array('jquery'),'1.1', true );
         wp_enqueue_style( 'ch_marina_css', plugins_url( 'ch_marina/css/ch_marina.css'),array(), NULL);
         $formId = "";
@@ -135,6 +136,7 @@ class CHMarinaInicio {
             $tipo = $emb->getTipo();
             $ubicacion = $emb->getUbicacion();
             $nombre = $emb->getNombre();
+            $estado = $emb->getEstado();
 //            print "<h1>id: ".$emb->getId()."</h1>";
             $formId = "<input type='hidden' name='id_embarcacion' value='$id_embacacion'/>";
             
@@ -161,6 +163,24 @@ class CHMarinaInicio {
             <label for="matricula"><?php _e( 'Matrícula' ) ?><br />
                 <input type="text" name="matricula" id="matricula" class="input" value="<?php echo esc_attr(  $matricula  ); ?>" size="25" /></label>
         </p>      
+
+        
+        <p>
+            <label for="estado"><?php _e( 'Estado administrativo' ) ?>
+                <br />
+                <select name="estado" id="estado">
+                    <option value="">Seleccionar</option>
+                    <?php foreach($tipos_estado as $te){ ?>
+                    <option value="<?php echo $te->id ?>" ><?php echo $te->descripcion ?></option>
+                    <?php  } ?>
+                </select>
+                <script>
+                    jQuery("#estado").val( <?=$estado ?> );
+                </script>
+            </label>
+        </p>
+        
+
         <p>
             <label for="tipo_embarcacion"><?php _e( 'Tipo de Embarcación' ) ?>
                 <br />
@@ -281,6 +301,7 @@ class CHMarinaInicio {
         if( !empty($post["tipo"])) $emb->setTipo(addslashes($post["tipo"]));
         if( !empty($post["ubicacion"])) $emb->setUbicacion(addslashes($post["ubicacion"]));
         if( !empty($post["matricula"])) $emb->setMatricula(addslashes($post["matricula"]));
+        if( !empty($post["estado"])) $emb->setEstado(addslashes($post["estado"]));
         
         
         

@@ -83,6 +83,24 @@ FOREIGN KEY (id_pago) REFERENCES ".$wpdb->prefix."ch_pago(id) ON DELETE RESTRICT
 );";
     dbDelta( $sql );
 
+    
+$sql = "CREATE TABLE IF NOT EXISTS ".$wpdb->prefix."ch_estados(
+id int NOT NULL AUTO_INCREMENT,
+descripcion varchar(100),
+UNIQUE KEY id (id)
+);";
+    dbDelta( $sql );
+
+$sql = "CREATE TABLE IF NOT EXISTS ".$wpdb->prefix."ch_embarcacion_estado(
+id_estado int,
+id_embarcacion int,
+fecha_desde date,
+fecha_hasta date
+);";
+    dbDelta( $sql );
+
+
+    
 }
 
 function cargarDatosIniciales(){

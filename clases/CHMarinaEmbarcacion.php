@@ -21,8 +21,18 @@ class CHMarinaEmbarcacion extends CHMarinaCore {
     protected $color;// varchar(20),
     protected $ubicacion;// varchar(120),
     protected $marca;// varchar(100),
+    protected $estado;//int
+
+
     protected $tabla = "ch_embarcaciones";
     
+
+
+    public function setEstado($estado) {
+        
+        $this->estado = $estado;
+    }
+
     public function getId() {
         return $this->id;
     }
@@ -110,8 +120,12 @@ class CHMarinaEmbarcacion extends CHMarinaCore {
         
         
         
-        $sql = "SELECT e.id, nombre, matricula, descripcion FROM ".$wpdb->prefix."ch_embarcaciones e INNER JOIN "
-                . "".$wpdb->prefix."ch_tipos_embarcacion t ON e.tipo = t.id $where";
+        $sql = "SELECT e.id, nombre, matricula, t.descripcion as tipoBarco, es.descripcion FROM ".$wpdb->prefix."ch_embarcaciones e INNER JOIN "
+                . "".$wpdb->prefix."ch_tipos_embarcacion t ON e.tipo = t.id LEFT JOIN "
+                . "".$wpdb->prefix."ch_embarcacion_estado ee ON ee.id_embarcacion = e.id AND ee.fecha_hasta IS NULL LEFT JOIN "
+                . "".$wpdb->prefix."ch_estados es ON ee.id_estado = es.id "
+                . "$where";
+
         $rs = $wpdb->get_results( $sql );
         return $rs;
     }
@@ -127,6 +141,49 @@ class CHMarinaEmbarcacion extends CHMarinaCore {
         return $rta;
     }
     
+    public function get_tipos_estado(){
+        global $wpdb;
+        $sql = "SELECT * FROM ".$wpdb->prefix."ch_estados";
+        $rta = $wpdb->get_results($sql);
+        return $rta;        
+    }
+    
+    public function getEstado() {
+        global $wpdb;
+        $sql = "SELECT * FROM ".$wpdb->prefix."ch_embarcacion_estado WHERE id_embarcacion = ".$this->id." AND fecha_hasta is null";
+        $rs = $wpdb->get_results( $sql );
+        if( !empty($rs) ){
+            $this->estado = $rs[0]->id_estado;
+        }else{
+            $this->estado= null;
+        }
+        return $this->estado;
+    }
+    
+    public function cambiarEstado( $id_estado ){
+        global $wpdb;
+        
+        $estado = $this->getEstado();
+        if( $estado != $id_estado ){
+            $hoy = date("Y-m-d");
+            if( !empty( $estado ) ){
+
+                $updatePrepare = $wpdb->prepare("UPDATE ".$wpdb->prefix."ch_embarcacion_estado "
+                        . "SET fecha_hasta = %s "
+                        . "WHERE id_estado = %d AND id_embarcacion = %d AND fecha_hasta IS NULL", 
+                        $hoy, $estado, $this->id);
+                $uprta = $wpdb->query( $updatePrepare );
+            }
+
+            $datos = ["fecha_desde"=>$hoy,
+                        "id_embarcacion"=>$this->id,
+                        "id_estado"=>$id_estado];
+            $format = ["%s"];
+            $wpdb->insert($wpdb->prefix."ch_embarcacion_estado", $datos, $format);
+
+        }
+    }
+    
     public function guardar(){
         $this->validar_alta();
         global $wpdb;
@@ -140,7 +197,7 @@ class CHMarinaEmbarcacion extends CHMarinaCore {
         if( !empty( $this->color ) ){ $datos["color"] = $this->color; $format[] = "%s"; }// varchar(20),
         if( !empty( $this->ubicacion ) ){ $datos["ubicacion"] = $this->ubicacion; $format[] = "%s"; }// varchar(120),
         if( !empty( $this->marca) ) { $datos["marca"] = $this->marca; $format[] = "%s"; }// varchar(100),  
-
+//        if( !empty( $this->estado ) ){ $datos["estado"] = $this->estado; $format[] = "%d"; }// int,
         
         if( !empty( $this->id ) ){
             $where = ["id"=>$this->id];
@@ -149,6 +206,9 @@ class CHMarinaEmbarcacion extends CHMarinaCore {
             $wpdb->insert($wpdb->prefix.$this->get_tabla(), $datos, $format);
             $this->id = $wpdb->insert_id;
         }
+
+        if( !empty( $this->estado  ) ){ $this->cambiarEstado( $this->estado ); };
+        
         return $this->id;
     }
     
