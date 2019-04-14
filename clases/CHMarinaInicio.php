@@ -124,8 +124,10 @@ class CHMarinaInicio {
         $emb = new CHMarinaEmbarcacion();
         $tipo_embarcacion = $emb->get_tipo_embarcacion();
         $tipos_estado = $emb->get_tipos_estado();
-        wp_enqueue_script( 'ch_marina', plugins_url( 'ch_marina/js/ch_marina.js'), array('jquery'),'1.1', true );
-        wp_enqueue_style( 'ch_marina_css', plugins_url( 'ch_marina/css/ch_marina.css'),array(), NULL);
+        $siteUrl = get_site_url();
+        echo "<script>var siteUrl = '".$siteUrl."'</script>";
+        wp_enqueue_script( 'ch_marina', plugins_url( 'marina/js/ch_marina.js'), array('jquery'),'1.1', true );
+        wp_enqueue_style( 'ch_marina_css', plugins_url( 'marina/css/ch_marina.css'),array(), NULL);
         $formId = "";
         if( !empty( $id_embacacion ) ){
             $emb->inicializar($id_embacacion);
