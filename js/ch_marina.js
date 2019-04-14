@@ -7,7 +7,7 @@ jQuery(document).ready( function(){
      //La llamada AJAX
        $.ajax({
            type : "get",
-           url : 'http://localhost:7002/wp-admin/admin-ajax.php', // Pon aquí tu URL
+           url : 'http://marinasauce.com/wp-admin/admin-ajax.php', // Pon aquí tu URL
            dataType: 'json',
            data : {
                action: "get_usuarios",
