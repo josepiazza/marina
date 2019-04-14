@@ -198,7 +198,7 @@ class CHMarinaUsuario extends CHMarinaCore{
     }
 
     function getError(){
-        var_dump($this->error);
+//        var_dump($this->error);
         return $this->error;
     }
     
