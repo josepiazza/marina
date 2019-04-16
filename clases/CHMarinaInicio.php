@@ -24,7 +24,7 @@ class CHMarinaInicio {
     public function crearMenu(){
         
         add_menu_page("CH_Marina", "Marina", "publish_pages", "ch_marina_menu_administrador", [$this, "listado_marina" ]);
-//        add_submenu_page("ch_marina_menu_administrador", "Embarcaciones", "Embarcaciones", "manage_options", "listado_marina", [$this, "listado_marina"]);
+        add_submenu_page("ch_marina_menu_administrador", "Pagos", "Embarcaciones", "manage_options", "listado_marina", [$this, "listado_marina"]);
 
 
     }
@@ -139,6 +139,7 @@ class CHMarinaInicio {
             $ubicacion = $emb->getUbicacion();
             $nombre = $emb->getNombre();
             $estado = $emb->getEstado();
+            $precio = $emb->getPrecio();
 //            print "<h1>id: ".$emb->getId()."</h1>";
             $formId = "<input type='hidden' name='id_embarcacion' value='$id_embacacion'/>";
             
@@ -213,6 +214,21 @@ class CHMarinaInicio {
             <label for="marca"><?php _e( 'Marca' ) ?><br />
                 <input type="text" name="marca" id="marca" class="input" value="<?php echo esc_attr(  $marca  ); ?>" size="100" /></label>
         </p>
+        
+        <div>
+            <label for="precio"><?php _e( 'Cuota Mensual vigente' ) ?><br />
+                <input type="text" name="precio" id="precio" class="input" value="<?php echo esc_attr(  $precio  ); ?>" size="10" /></label>
+                <blockquote>
+                    <?php _e( 'Precions anteriores:' ) ?><br/>
+                    <table>
+                        <tr>
+                            <td>Desde</td>
+                            <td>Hata</td>
+                            <td>Valor</td>
+                        </tr>
+                    </table>
+                </blockquote>
+        </div>
         
         <div>
             <div style="">
@@ -308,6 +324,11 @@ class CHMarinaInicio {
         
         
         $id_embarcacion = $emb->guardar();
+        
+        if( !empty( $post["precio"] ) ){
+            $emb->agregarPrecio( $post["precio"] );
+        }
+        
         $emb->limpiarUsuarios();
         if( !empty( $post["usuarios"] ) ){
             foreach(  $post["usuarios"] as $user_id ){

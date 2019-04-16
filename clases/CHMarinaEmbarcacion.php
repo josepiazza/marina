@@ -253,6 +253,48 @@ FIL;
         return $rta.parent::get_tabla_html($filtro, $pagina);
     }
     
+    public function getPrecio(){
+        global $wpdb;
+        $sql = "SELECT precio FROM ".$wpdb->prefix."ch_precio_embarcacion WHERE id_embarcacion = ".$this->id." AND hasta is null";
+        $rta = $wpdb->get_results($sql);
+        if( !empty($rta) ){
+            return $rta[0]->precio;
+        }else{
+            return 0;
+        }
+    }
+    
+    public function agregarPrecio($valor){
+        global $wpdb;
+        $sql = "SELECT * FROM ".$wpdb->prefix."ch_precio_embarcacion WHERE id_embarcacion = ".$this->id." AND hasta is null "; 
+        $rta = $wpdb->get_results($sql);
+        if( $rta[0]->precio != $valor ){
+            $hoy = date("Y-m-d");
+            print $rta[0]->desde." == ".$hoy; 
+            if( $rta[0]->desde == 1 ){
+                $updatePrepare = $wpdb->prepare("UPDATE ".$wpdb->prefix."ch_precio_embarcacion "
+                        . "SET precio = %d "
+                        . "WHERE id_embarcacion = %d AND hasta IS NULL", 
+                        $valor, $this->id);
+                $uprta = $wpdb->query( $updatePrepare );
+            }else{
+                $updatePrepare = $wpdb->prepare("UPDATE ".$wpdb->prefix."ch_precio_embarcacion "
+                        . "SET hasta = %s "
+                        . "WHERE id_embarcacion = %d AND  hasta IS NULL", 
+                        $hoy, $this->id);
+                $uprta = $wpdb->query( $updatePrepare );
+                $datos = ["desde"=>$hoy,
+                            "id_embarcacion"=>$this->id,
+                            "precio"=>$valor];
+                $format = ["%s", "%d", "%d"];
+                $wpdb->insert($wpdb->prefix."ch_precio_embarcacion", $datos, $format);
+            }
+        }else{
+            return 0;
+        }
+        
+    }
+    
     protected function validar_alta(){
         //valido que tenga tipo de embarcacion
         // que la matrícula no exista

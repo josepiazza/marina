@@ -58,6 +58,7 @@ $sql = "CREATE TABLE IF NOT EXISTS ".$wpdb->prefix."ch_precio_embarcacion(
 id int NOT NULL AUTO_INCREMENT,
 id_embarcacion int,
 precio DECIMAL(7,2),
+desde date,
 hasta date,
 UNIQUE KEY id (id),
 FOREIGN KEY (id_embarcacion) REFERENCES ".$wpdb->prefix."ch_embarcaciones(id) ON DELETE RESTRICT
