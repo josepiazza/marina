@@ -198,18 +198,18 @@ class CHMarinaInicio {
                 </script>
             </label>
         </p>
-        <p>
+<!--        <p>
             <label for="eslora"><?php _e( 'Eslora' ) ?><br />
                 <input type="text" name="eslora" id="eslora" class="input" value="<?php echo esc_attr(  $eslora  ); ?>" size="25" /></label>
         </p>
         <p>
             <label for="color"><?php _e( 'Color' ) ?><br />
                 <input type="text" name="color" id="color" class="input" value="<?php echo esc_attr(  $color  ); ?>" size="20" /></label>
-        </p>
-        <p>
+        </p>-->
+<!--        <p>
             <label for="ubicacion"><?php _e( 'Ubicación' ) ?><br />
                 <input type="text" name="ubicacion" id="ubicacion" class="input" value="<?php echo esc_attr(  $ubicacion  ); ?>" size="120" /></label>
-        </p>
+        </p>-->
         <p>
             <label for="marca"><?php _e( 'Marca' ) ?><br />
                 <input type="text" name="marca" id="marca" class="input" value="<?php echo esc_attr(  $marca  ); ?>" size="100" /></label>
