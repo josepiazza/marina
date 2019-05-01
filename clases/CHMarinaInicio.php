@@ -8,8 +8,7 @@ namespace ch_marina\marina;
 
 use ch_marina\marina\clases\CHMarinaEmbarcacion;
 use ch_marina\marina\clases\CHMarinaUsuario;
-
-
+use ch_marina\marina\clases\CHMarinaPago;
 
 class CHMarinaInicio {
     
@@ -18,13 +17,15 @@ class CHMarinaInicio {
 //        add_action( 'wp_enqueue_scripts', [$this, 'ajax_enqueue_scripts'] );
         add_action( 'wp_ajax_nopriv_get_usuarios', [$this, 'notify_button_click' ] );
         // Hook para usuarios logueados
-        add_action( 'wp_ajax_get_usuarios', [ $this, 'notify_button_click' ]);
+        add_action( 'wp_ajax_get_usuarios', [ $this, 'ajax_get_usuarios' ]);
+        add_action( 'wp_ajax_get_embarcaciones', [ $this, 'ajax_get_embarcaciones' ]);
+        add_action( 'wp_ajax_get_embarcacion_precio', [ $this, 'ajax_get_embarcacion_precio' ]);
     }
     
     public function crearMenu(){
         
         add_menu_page("CH_Marina", "Marina", "publish_pages", "ch_marina_menu_administrador", [$this, "listado_marina" ]);
-        add_submenu_page("ch_marina_menu_administrador", "Pagos", "Embarcaciones", "manage_options", "listado_marina", [$this, "listado_marina"]);
+        add_submenu_page("ch_marina_menu_administrador", "Pagos", "Pagos", "manage_options", "listado_marina", [$this, "listadoPagos"]);
 
 
     }
@@ -36,21 +37,26 @@ class CHMarinaInicio {
 
 
     // Función que procesa la llamada AJAX
-    public function notify_button_click(){
-        // Check parameters
-        
+    public function ajax_get_usuarios(){
         $usuarios = new CHMarinaUsuario();
-        $lista = $usuarios->get_lista(["parametrosBusqueda"=>$_GET["busqueda"]]);
-        
+        $lista = $usuarios->get_lista(["parametrosBusqueda"=>$_GET["busqueda"]]);    
         wp_send_json(["busqueda"=>$_GET["busqueda"], "rta"=>$lista], 200);
-        
-//        $message  = isset( $_GET['message'] ) ? $_GET['message'] : false;
-//        if( !$message ){
-//            wp_send_json( array('message' => __('Message not received :(', 'wpduf') ) );
-//        }
-//        else{
-//            wp_send_json( array('message' => __('Message received, greetings from server!', 'wpduf') ) );
-//        }
+    }
+    
+    public function ajax_get_embarcacion_precio(){
+        $em = new CHMarinaEmbarcacion();
+        $em->inicializar( intval( $_GET["id_emb"] ) );
+        $precio2 = floatval($em->getPrecio());
+        $precio = $precio2;
+        $rta = ["id"=>$_GET["id_emb"] , "rta"=>["precio"=> $precio2, "nombre"=>665] ];
+        wp_send_json( $rta, 200);
+    }
+    
+    public function ajax_get_embarcaciones(){
+        $em = new CHMarinaEmbarcacion();
+        $lista = $em->get_lista(["parametrosBusqueda"=>$_GET["busqueda"]]);
+        wp_send_json(["busqueda"=>$_GET["busqueda"], "rta"=>$lista], 200);
+
     }
     
     public function listado_marina(){
@@ -99,6 +105,9 @@ class CHMarinaInicio {
                         $this->formulario_embarcacion_admin( addslashes( $_REQUEST["id"]) );
                         break;
                 }
+                break;
+            case "pagos":
+                $this->getListaPagos( $_REQUEST );
                 break;
             default:
                 $this->correrTest();
@@ -353,6 +362,238 @@ class CHMarinaInicio {
         }else{
             return $user->getError();
         }
+    }
+
+    public function getListaPagos(){
+        
+        switch($_REQUEST["modoPago"]){
+
+            case "nuevoPago":
+                $this->getFormularioPago();
+                break;
+            case "guardarPago":
+                if($_REQUEST["guardar"] == "Guardar"){
+                    $this->guardarPago();
+                }else{
+                   $this->listadoPagos(); 
+                }
+                
+                break;
+            case "verPago":
+                $this->getFormularioPago($_REQUEST["id"], true);
+                break;
+            default:
+                $this->listadoPagos();
+        }
+        
+        
+    }
+    
+    public function listadoPagos(){
+        
+        wp_enqueue_style( 'ch_marina_css', plugins_url( 'marina/css/ch_marina.css'),array(), NULL);
+        $pago = new CHMarinaPago();
+        $tabla = $pago->get_tabla_html( null );
+        
+        $rta = <<<RTA
+ 
+    <div class="row">
+        <button onClick='location.href="?page=ch_marina_menu_administrador&modo=pagos&id=$id_embacacion&modoPago=nuevoPago"'>Nuevo pago</button>
+    </div>
+    <div class="row">
+                <h2>Listado</h2>
+         $tabla       
+    </div>
+RTA;
+        
+        print $rta;
+        
+        
+        
+    }
+    
+    public function guardarPago(){
+//        print_r($_REQUEST);
+        
+        $pago = new CHMarinaPago();
+        $items = $_REQUEST["itemPago"];
+        $monto = 0;
+        foreach($items as $itemPago){
+            $itemPago = str_replace("\\", "",  $itemPago) ;
+            $itemPago = json_decode($itemPago);
+            $monto += $itemPago->monto;
+            $pago->agregarItem($itemPago);
+        }
+        
+        $fechaPago = strtotime($_REQUEST["datepicker"]);
+        $fechaPago = date("Y-m-d", $fechaPago);
+        $pago->setFecha_alta(date("Y-m-d"));
+        $pago->setFecha_pago( $fechaPago );
+        $pago->setMonto($monto);
+        $pago->setTipo_pago($_REQUEST["tipo_pago"]);
+//        exit();
+        $pago->guardar();
+                
+                
+//        id_pago] => [tipo_pago] => 1 [datepicker] => 04/29/2019
+    }
+    
+    public function cabeceraEmbarcacion( $id_embacacion ){
+        
+        wp_enqueue_style( 'ch_marina_css', plugins_url( 'marina/css/ch_marina.css'),array(), NULL);
+        
+        $emb = new CHMarinaEmbarcacion();
+        $emb->inicializar($id_embacacion);
+        $marca = $emb->getMarca();
+        $matricula = $emb->getMatricula();
+        $tipo = $emb->getTipo();
+        $ubicacion = $emb->getUbicacion();
+        $nombre = $emb->getNombre();
+        $estado = $emb->getEstado();
+        $precio = $emb->getPrecio();
+        
+        $rta = <<<RTA
+   
+   <div class="row">
+        <div class="cajaDato">
+                <div class="negrita">Nombre:</div>
+                <div>$nombre</div>
+        </div>
+        <div class="cajaDato">
+                <div class="negrita">Matricula</div>
+                <div>$matricula</div>
+        </div>
+   
+   </div>
+    <div class="row">
+        <button onClick='location.href="?page=ch_marina_menu_administrador&modo=pagos&id=$id_embacacion&modoPago=nuevoPago"'>Nuevo pago</button>
+    </div>
+RTA;
+        
+        return $rta;
+        
+        
+    }
+    
+    public function getFormularioPago( $id=null, $modoVer = false ){
+            // Load the datepicker script (pre-registered in WordPress).
+        wp_enqueue_script( 'jquery-ui-datepicker' );
+
+        // You need styling for the datepicker. For simplicity I've linked to Google's hosted jQuery UI CSS.
+        wp_register_style( 'jquery-ui', 'http://code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css' );
+        wp_enqueue_style( 'jquery-ui' );  
+        
+        wp_enqueue_script( 'ch_marina', plugins_url( 'marina/js/ch_marina.js'), array(),NULL );
+        wp_enqueue_style( 'ch_marina_css', plugins_url( 'marina/css/ch_marina.css'),array(), NULL);
+        $siteUrl = get_site_url();
+        echo "<script>var siteUrl = '".$siteUrl."'</script>";
+        
+        $pago = new CHMarinaPago();
+        
+        $tiposPago = $pago->getTiposPago();
+        
+        
+        if( isset($id) ){
+            $pago->inicializar($id);
+            $fechaPago = $pago->getFecha_pago();
+            $fechaAlta = $pago->getFecha_alta();
+            $monto = $pago->getMonto();
+            $tipoPago = $pago->getTipo_pago();
+            $items = $pago->getItems();
+            foreach($items as $i){
+                $itemHTML .= "<tr><td>$i->nombre</td><td>$i->importe</td></tr>";
+            }
+        }else{
+            $monto = 0;
+            $id_pago = "";
+            $tipoPago = "";
+        
+        }
+        $disabled = "";
+        if($modoVer == true){
+            $disabled = "disabled";
+        }
+        
+       ?>
+<h2>Usuario</h2>
+<form action="?page=ch_marina_menu_administrador&modo=pagos&modoPago=guardarPago" method="post" id="formularioPago">
+    <!--<input type="hidden" name="id_pago" value="" />-->
+            <label for="tipo_pago"><?php _e( 'Tipo de Pago' ) ?>
+                <br />
+                <select name="tipo_pago" id="tipo_pago" <?=$disabled?> >
+                    <option value="">Seleccionar</option>
+                    <?php foreach($tiposPago as $te){ ?>
+                    <option value="<?php echo $te->id ?>" ><?php echo $te->descripcion ?></option>
+                    <?php  } ?>
+                </select>
+            </label>
+        <p>
+            <label for="fecha_pago"><?php _e( 'Fecha Pago' ) ?><br />
+                <input type="text" name="datepicker" id="datepicker" class="input" value="<?=$fechaPago?>" size="25" <?=$disabled?> /></label>
+        </p>
+        <p>
+            <label for="monto"><?php _e( 'Monto a pagar' ) ?><br />
+                <input type="text" name="monto" id="monto" class="input" value="<?=$monto?>" size="25" disabled /></label>
+        </p>
+
+        
+        <div>
+            <?php if($modoVer == false){ ?>
+            <div class="row">
+                Buscar:<br/>
+                <input type="text" name="busqueda" id="textBusqueda">
+                <button name="btnBuscarEmbarcacion" id="btnBuscarEmbarcacion" type="button" >Buscar</button><br/>
+                <select name="listaEmbarcaciones" id="listaEmbarcaciones" multiple  style="width: 400px; height: 100px">
+                    
+                </select>
+
+            </div>
+            <?php } ?>
+            <div  class="row">
+                
+                <table id="embarcaciones"   style="width: 450px">
+                    <thead><tr>
+                            <td style="width: 200px">Nombre</td>
+                            <td style="width: 200px">Precio</td>
+                            <?php if($modoVer == false){ ?><td style="width: 50px">Quitar</td><?php } ?>
+                        </tr></thead>
+                    <tbody>
+                        <?=$itemHTML?>
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+        <?php if($modoVer == false){ ?>
+        <p><input type="submit" name="guardar" value="Guardar" />
+        <input type="submit" name="guardar" value="Salir"/>
+        </p>
+        <?php }else{ ?>
+        <p><input type="submit" name="guardar" value="Borrar" />
+        <input type="submit" name="guardar" value="Salir"/>
+        <?php } ?>
+</form>        
+<script>
+    
+    jQuery("#tipo_pago").val( <?=$tipoPago ?> );
+    
+    jQuery(document).ready(function($) {
+        $("#datepicker").datepicker();
+    });
+    
+    jQuery("#monto").val( <?=$monto?> );
+    
+</script>
+        <?php
+        
+    }
+    
+    public function listado_pagos(  ){
+        ?>
+    <div class="row">
+        <button onClick='location.href="?page=ch_marina_menu_administrador&modo=pagos&id=$id_embacacion&modoPago=nuevoPago"'>Nuevo pago</button>
+    </div>
+<?php
     }
 }
 

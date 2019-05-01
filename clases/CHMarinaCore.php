@@ -22,7 +22,7 @@ abstract class CHMarinaCore {
         abstract public function get_lista( $filtro, $pagina = 1 );
     
     
-    public function get_tabla_html($filtro, $pagina = 1){
+    public function get_tabla_html($filtro, $pagina = 1, $tdExtra=[]){
         $lista = $this->get_lista($filtro, $pagina = 1);
         $campoid= $this->get_campo_id();
         $rta = "<table class='wp-list-table widefat fixed striped posts'><tbody id='the-list'>";
@@ -35,6 +35,14 @@ abstract class CHMarinaCore {
             }  
             
         $rta .= "<td style='width:80px'><a href='?page=ch_marina_menu_administrador&modo=edit&tbl=".$this->get_option_editar()."&id=".$row->$campoid."'>Editar </a></td>";
+
+        if( !empty($tdExtra) ){
+            foreach( $tdExtra as $td ){
+                $td = str_replace("%id", $row->$campoid, $td);
+                $rta .= "<td style='width:80px'> $td </td>";
+            }
+        }
+        $rta .= "</tr>";
 //        $rta .= "<td style='width:80px'>Borrrar</td></tr>";
         }
         $rta .= "</tbody></table>";
@@ -43,7 +51,11 @@ abstract class CHMarinaCore {
     
     public function inicializar($id){
         global $wpdb;
+        
+        $campoID = $this->get_campo_id();
+        $this->$campoID = $id; 
         $sql = "SELECT * FROM ".$wpdb->prefix.$this->get_tabla()." WHERE ".$this->get_campo_id()." = ".$id;
+
         $rs = $wpdb->get_results( $sql , ARRAY_A);
         
         $class = get_class( $this );

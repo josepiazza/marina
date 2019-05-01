@@ -100,7 +100,15 @@ fecha_hasta date
 );";
     dbDelta( $sql );
 
-
+$sql = "CREATE TABLE IF NOT EXISTS ".$wpdb->prefix."ch_pago_x_embarcacion(
+id int NOT NULL AUTO_INCREMENT,
+id_pago int,
+id_precio int,
+importe DECIMAL(7,2),
+UNIQUE KEY id (id),
+FOREIGN KEY (id_pago) REFERENCES ".$wpdb->prefix."ch_pago(id) ON DELETE RESTRICT,
+FOREIGN KEY (id_precio) REFERENCES ".$wpdb->prefix."ch_precio_embarcacion(id) ON DELETE RESTRICT
+)";
     
 }
 

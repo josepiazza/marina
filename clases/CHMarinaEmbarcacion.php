@@ -237,7 +237,7 @@ class CHMarinaEmbarcacion extends CHMarinaCore {
         return $rta;
     }
     
-    public function get_tabla_html($filtro, $pagina = 1) {
+    public function get_tabla_html($filtro, $pagina = 1, $tdExtra=[]) {
         
         $parametrosBusqueda = (!empty($filtro["parametrosBusqueda"]))?$filtro["parametrosBusqueda"]:"";
       
@@ -248,9 +248,9 @@ class CHMarinaEmbarcacion extends CHMarinaCore {
 
    </form><hr/>
 FIL;
+        $tdExtra[] = "<a href='?page=ch_marina_menu_administrador&modo=pagos&id=%id'>Pagos</a>";
         
-        
-        return $rta.parent::get_tabla_html($filtro, $pagina);
+        return $rta.parent::get_tabla_html($filtro, $pagina, $tdExtra);
     }
     
     public function getPrecio(){
