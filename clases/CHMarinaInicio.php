@@ -25,7 +25,7 @@ class CHMarinaInicio {
     public function crearMenu(){
         
         add_menu_page("CH_Marina", "Marina", "publish_pages", "ch_marina_menu_administrador", [$this, "listado_marina" ]);
-        add_submenu_page("ch_marina_menu_administrador", "Pagos", "Pagos", "manage_options", "listado_marina", [$this, "listadoPagos"]);
+        add_submenu_page("ch_marina_menu_administrador", "Pagos", "Pagos", "ch_marina_menu_administrador", "listado_marina", [$this, "listadoPagos"]);
 
 
     }
@@ -61,8 +61,8 @@ class CHMarinaInicio {
     
     public function listado_marina(){
         print "<h1>Marina</h1>";
-         $usuarios = new CHMarinaUsuario();
-        $lista = $usuarios->get_lista();       
+//         $usuarios = new CHMarinaUsuario();
+//        $lista = $usuarios->get_lista();       
         switch($_REQUEST["modo"]){
             case "altaEmb":
                 $this->formulario_embarcacion_admin();
@@ -106,15 +106,24 @@ class CHMarinaInicio {
                         break;
                 }
                 break;
+            case "embarcacionPagos":
+                $this->getListaPagosEmbarcacion( $_REQUEST );
+                break;
             case "pagos":
                 $this->getListaPagos( $_REQUEST );
                 break;
             default:
-                $this->correrTest();
+//                $this->correrTest();
                 $this->mostrar_listado_embarcaciones();
                 
         }
 
+    }
+    
+    public function getListaPagosEmbarcacion(){
+        $item = new clases\CHMarinaItem();
+        print $this->cabeceraEmbarcacion(3);
+        print $item->get_tabla_html("3");
     }
     
     public function correrTest(){
@@ -465,9 +474,7 @@ RTA;
         </div>
    
    </div>
-    <div class="row">
-        <button onClick='location.href="?page=ch_marina_menu_administrador&modo=pagos&id=$id_embacacion&modoPago=nuevoPago"'>Nuevo pago</button>
-    </div>
+
 RTA;
         
         return $rta;

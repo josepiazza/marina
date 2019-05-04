@@ -125,7 +125,7 @@ class CHMarinaEmbarcacion extends CHMarinaCore {
                 . "".$wpdb->prefix."ch_embarcacion_estado ee ON ee.id_embarcacion = e.id AND ee.fecha_hasta IS NULL LEFT JOIN "
                 . "".$wpdb->prefix."ch_estados es ON ee.id_estado = es.id "
                 . "$where";
-
+//print $sql;
         $rs = $wpdb->get_results( $sql );
         return $rs;
     }
@@ -248,7 +248,7 @@ class CHMarinaEmbarcacion extends CHMarinaCore {
 
    </form><hr/>
 FIL;
-        $tdExtra[] = "<a href='?page=ch_marina_menu_administrador&modo=pagos&id=%id'>Pagos</a>";
+        $tdExtra[] = "<a href='?page=ch_marina_menu_administrador&modo=embarcacionPagos&id=%id'>Pagos</a>";
         
         return $rta.parent::get_tabla_html($filtro, $pagina, $tdExtra);
     }

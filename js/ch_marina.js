@@ -127,7 +127,7 @@ jQuery(document).ready( function(){
                     
                     $("#monto").val( parseInt($("#monto").val()) + precio ) 
                     
-                    $("#embarcaciones tbody").append("<tr id='emb_"+id+"'><td>"+texto+"</td><td><input name='precio[]' onChange='recalcularMontoPago()' value='"+precio+"'></td><td><button type='button' value='"+id +"' onClick='descartarEmbarcacion( this )'>X</button></li></td></tr>");
+                    $("#embarcaciones tbody").append("<tr id='emb_"+id+"'><td>"+texto+"</td><td><input name='precio[]' id='precio_"+response.id+"' onChange='recalcularMontoPago("+response.id+")' value='"+precio+"'></td><td><button type='button' value='"+id +"' onClick='descartarEmbarcacion( this )'>X</button></li></td></tr>");
                     $("#formularioPago").append("<input type='hidden' name='itemPago[]' id='item_"+response.id+"' value='{\"id\": "+response.id+", \"monto\": "+precio+" }'/>");
                     recalcularMontoPago();
                 
@@ -150,9 +150,11 @@ jQuery(document).ready( function(){
        recalcularMontoPago();
    };
    
-   var recalcularMontoPago = function(){
+   var recalcularMontoPago = function( id ){
        
 //       alert( $("input[name='precio[]'").length );
+        precio = $("precio_"+id).val();
+        $("#item_"+id).val('{"id": "'+id+'", "monto": "'+precio+'" }');
         acum = 0;
         $("input[name='precio[]'").each(function(){
             acum = acum + parseInt( this.value );
