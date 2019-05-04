@@ -25,7 +25,7 @@ class CHMarinaInicio {
     public function crearMenu(){
         
         add_menu_page("CH_Marina", "Marina", "publish_pages", "ch_marina_menu_administrador", [$this, "listado_marina" ]);
-        add_submenu_page("ch_marina_menu_administrador", "Pagos", "Pagos", "ch_marina_menu_administrador", "listado_marina", [$this, "listadoPagos"]);
+        add_submenu_page("ch_marina_menu_administrador", "Pagos", "Pagos", "manage_options", "listado_marina", [$this, "listadoPagos"]);
 
 
     }
