@@ -25,7 +25,7 @@ class CHMarinaInicio {
     public function crearMenu(){
         
         add_menu_page("CH_Marina", "Marina", "publish_pages", "ch_marina_menu_administrador", [$this, "listado_marina" ]);
-        add_submenu_page("ch_marina_menu_administrador", "Pagos", "Pagos", "manage_options", "listado_marina", [$this, "listadoPagos"]);
+        add_submenu_page("ch_marina_menu_administrador", "Pagos", "Pagos", "publish_pages", "listado_marina", [$this, "listadoPagos"]);
 
 
     }
@@ -422,7 +422,7 @@ RTA;
     }
     
     public function guardarPago(){
-//        print_r($_REQUEST);
+        print_r($_REQUEST);
         
         $pago = new CHMarinaPago();
         $items = $_REQUEST["itemPago"];
@@ -430,16 +430,30 @@ RTA;
         foreach($items as $itemPago){
             $itemPago = str_replace("\\", "",  $itemPago) ;
             $itemPago = json_decode($itemPago);
+            
+            var_dump($itemPago);
+            
             $monto += $itemPago->monto;
             $pago->agregarItem($itemPago);
         }
         
         $fechaPago = strtotime($_REQUEST["datepicker"]);
         $fechaPago = date("Y-m-d", $fechaPago);
+        
+        $fechaDesde = strtotime($_REQUEST["desde_fecha"]);
+        $fechaDesde = date("Y-m-d", $fechaDesde);
+
+        $fechaHasta = strtotime($_REQUEST["hasta_fecha"]);
+        $fechaHasta = date("Y-m-d", $fechaHasta);        
+        
+        $pago->setFecha_desde($fechaDesde);
+        $pago->setFecha_hasta($fechaHasta);
+        
         $pago->setFecha_alta(date("Y-m-d"));
         $pago->setFecha_pago( $fechaPago );
         $pago->setMonto($monto);
         $pago->setTipo_pago($_REQUEST["tipo_pago"]);
+        $pago->setIdentificador_pago($_REQUEST["identificador_pago"]);
 //        exit();
         $pago->guardar();
                 
@@ -506,6 +520,11 @@ RTA;
             $fechaAlta = $pago->getFecha_alta();
             $monto = $pago->getMonto();
             $tipoPago = $pago->getTipo_pago();
+            $identificador_pago = $pago->getIdentificador_pago();
+            $fechaDesde = $pago->getFecha_desde();
+            $fechaHasta = $pago->getFecha_hasta();
+            $identificador_pago = $pago->getIdentificador_pago();
+            
             $items = $pago->getItems();
             foreach($items as $i){
                 $itemHTML .= "<tr><td>$i->nombre</td><td>$i->importe</td></tr>";
@@ -514,7 +533,12 @@ RTA;
             $monto = 0;
             $id_pago = "";
             $tipoPago = "";
-        
+            $fechaPago = "";
+            $fechaAlta = "";
+            $fechaDesde = "";
+            $fechaHasta = "";
+            $identificador_pago = "";
+            $identificador_pago = "";
         }
         $disabled = "";
         if($modoVer == true){
@@ -525,22 +549,34 @@ RTA;
 <h2>Usuario</h2>
 <form action="?page=ch_marina_menu_administrador&modo=pagos&modoPago=guardarPago" method="post" id="formularioPago">
     <!--<input type="hidden" name="id_pago" value="" />-->
-            <label for="tipo_pago"><?php _e( 'Tipo de Pago' ) ?>
-                <br />
-                <select name="tipo_pago" id="tipo_pago" <?=$disabled?> >
-                    <option value="">Seleccionar</option>
-                    <?php foreach($tiposPago as $te){ ?>
-                    <option value="<?php echo $te->id ?>" ><?php echo $te->descripcion ?></option>
-                    <?php  } ?>
-                </select>
-            </label>
+            <label for="tipo_pago"><?php _e( 'Tipo de Pago' ) ?></label>
+            <br />
+            <select name="tipo_pago" id="tipo_pago" <?=$disabled?> onchange="buscarIdentificadorPAgo()">
+                <option value="">Seleccionar</option>
+                <?php foreach($tiposPago as $te){ ?>
+                <option value="<?php echo $te->id ?>" ><?php echo $te->descripcion ?></option>
+                <?php  } ?>
+            </select>
+            
         <p>
-            <label for="fecha_pago"><?php _e( 'Fecha Pago' ) ?><br />
-                <input type="text" name="datepicker" id="datepicker" class="input" value="<?=$fechaPago?>" size="25" <?=$disabled?> /></label>
+            <label for="fecha_pago"><?php _e( 'Fecha Pago' ) ?><br /></label>
+                <input type="text" name="datepicker" id="datepicker" class="input" value="<?=$fechaPago?>" size="25" <?=$disabled?> autocomplete="off" />
         </p>
+        
         <p>
-            <label for="monto"><?php _e( 'Monto a pagar' ) ?><br />
-                <input type="text" name="monto" id="monto" class="input" value="<?=$monto?>" size="25" disabled /></label>
+            <label for="identificador_pago" id="identificador_pago_label"></label><br />
+                <input type="text" name="identificador_pago" id="identificador_pago" class="input" value="<?=$identificador_pago?>" size="50" <?=$disabled?> />
+        </p>
+        
+        <p>
+            <label><?php _e( 'Periodo de Pago' ) ?></label><br />
+                <?php _e( 'Desde' ) ?>: <input type="text" name="desde_fecha" id="desde_fecha" class="input" value="<?=$fechaDesde?>" size="10" <?=$disabled?> autocomplete="off" /><br/>
+                <?php _e( 'Hasta' ) ?>: <input type="text" name="hasta_fecha" id="hasta_fecha" class="input" value="<?=$fechaHasta?>" size="10" <?=$disabled?>  autocomplete="off" />
+        </p>
+        
+        <p>
+            <label for="monto"><?php _e( 'Monto a pagar' ) ?><br /></label>
+                <input type="text" name="monto" id="monto" class="input" value="<?=$monto?>" size="25" disabled />
         </p>
 
         
@@ -586,10 +622,19 @@ RTA;
     
     jQuery(document).ready(function($) {
         $("#datepicker").datepicker();
+        $("#desde_fecha").datepicker();
+        $("#hasta_fecha").datepicker();
     });
     
     jQuery("#monto").val( <?=$monto?> );
     
+    var identificadores = [
+    <?php foreach($tiposPago as $te){ ?>
+    ["<?php echo $te->id ?>" , "<?php echo $te->identificador_pago ?>"],
+    <?php  } ?>
+        ["null", "mull"]
+    ];
+
 </script>
         <?php
         

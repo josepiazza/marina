@@ -14,8 +14,36 @@ class CHMarinaPago extends CHMarinaCore {
     protected $fecha_pago;
     protected $monto;
     protected $tipo_pago;
+    protected $fecha_desde;
+    protected $fecha_hasta;
+    protected $identificador_pago;
     
-    protected $items;
+    public function getIdentificador_pago() {
+        return $this->identificador_pago;
+    }
+
+    public function setIdentificador_pago($identificador_pago) {
+        $this->identificador_pago = $identificador_pago;
+    }
+
+        
+    public function getFecha_desde() {
+        return $this->fecha_desde;
+    }
+
+    public function getFecha_hasta() {
+        return $this->fecha_hasta;
+    }
+
+    public function setFecha_desde($fecha_desde) {
+        $this->fecha_desde = $fecha_desde;
+    }
+
+    public function setFecha_hasta($fecha_hasta) {
+        $this->fecha_hasta = $fecha_hasta;
+    }
+
+        protected $items;
     
     public function getFecha_alta() {
         return $this->fecha_alta;
@@ -79,7 +107,7 @@ class CHMarinaPago extends CHMarinaCore {
     public function get_lista($filtro, $pagina = 1) {
         global $wpdb;
         
-        $sql = "SELECT * FROM ".$wpdb->prefix."ch_pago";
+        $sql = "SELECT * FROM ".$wpdb->prefix."ch_pago ORDER BY fecha_alta DESC";
 //        as p
 //                INNER JOIN ".$wpdb->prefix."ch_pago_x_embarcacion as i ON p.id = i.id_pago
 //                INNER JOIN ".$wpdb->prefix."ch_precio_embarcacion as m ON m.id = i.id_precio
@@ -136,6 +164,13 @@ class CHMarinaPago extends CHMarinaCore {
         if( !empty( $this->fecha_pago ) ){ $datos["fecha_pago"] = $this->fecha_pago; $format[] = "%s"; }
         if( !empty( $this->monto ) ){ $datos["monto"] = $this->monto; $format[] = "%d"; }
         if( !empty( $this->tipo_pago ) ){ $datos["tipo_pago"] = $this->tipo_pago; $format[] = "%d"; }
+        
+        
+        if( !empty( $this->identificador_pago ) ){ $datos["identificador_pago"] = $this->identificador_pago; $format[] = "%s"; }
+        
+        
+        if( !empty( $this->fecha_desde ) ){ $datos["fecha_desde"] = $this->fecha_desde; $format[] = "%s"; }
+        if( !empty( $this->fecha_hasta ) ){ $datos["fecha_hasta"] = $this->fecha_hasta; $format[] = "%s"; }
 
 ////        if( !empty( $this->estado ) ){ $datos["estado"] = $this->estado; $format[] = "%d"; }// int,
 //        

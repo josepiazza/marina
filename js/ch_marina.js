@@ -122,10 +122,8 @@ jQuery(document).ready( function(){
                console.log(response);
            },
            success: function(response) {
-              
                     precio = response.rta.precio;
                     
-                    $("#monto").val( parseInt($("#monto").val()) + precio ) 
                     
                     $("#embarcaciones tbody").append("<tr id='emb_"+id+"'><td>"+texto+"</td><td><input name='precio[]' id='precio_"+response.id+"' onChange='recalcularMontoPago("+response.id+")' value='"+precio+"'></td><td><button type='button' value='"+id +"' onClick='descartarEmbarcacion( this )'>X</button></li></td></tr>");
                     $("#formularioPago").append("<input type='hidden' name='itemPago[]' id='item_"+response.id+"' value='{\"id\": "+response.id+", \"monto\": "+precio+" }'/>");
@@ -153,8 +151,9 @@ jQuery(document).ready( function(){
    var recalcularMontoPago = function( id ){
        
 //       alert( $("input[name='precio[]'").length );
-        precio = $("precio_"+id).val();
-        $("#item_"+id).val('{"id": "'+id+'", "monto": "'+precio+'" }');
+
+        precio = $("#precio_"+id).val();
+        $("#item_"+id).val('{"id": "'+id+'", "monto": '+precio+' }');
         acum = 0;
         $("input[name='precio[]'").each(function(){
             acum = acum + parseInt( this.value );
@@ -180,3 +179,24 @@ jQuery(document).ready( function(){
            return true;
        }
    };
+   
+       
+    
+    var buscarIdentificadorPAgo = function(){
+        id = $("#tipo_pago option:selected").val();
+
+        for(i=0; i<identificadores.length;i++){
+            if(identificadores[i][0] == id){
+                if(  identificadores[i][1].length > 0 ){
+                    $("#identificador_pago_label").text( identificadores[i][1]+"ok" );
+                    $("#identificador_pago").prop( "disabled",false);
+                }else{
+                    $("#identificador_pago_label").text( "No necesario" );
+                    $("#identificador_pago").prop( "disabled",true);
+//                    alert( identificadores[i][0] );
+                }
+                
+                break;
+            }
+        }
+    }

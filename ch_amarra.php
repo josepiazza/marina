@@ -29,6 +29,7 @@ UNIQUE KEY id (id)
 $sql = "CREATE TABLE IF NOT EXISTS ".$wpdb->prefix."ch_tipo_pago(
 id int NOT NULL AUTO_INCREMENT,
 descripcion varchar(100),
+identificador_pago varchar(50),
 UNIQUE KEY id (id)
 );";
     dbDelta( $sql );
@@ -69,6 +70,8 @@ $sql = "CREATE TABLE IF NOT EXISTS ".$wpdb->prefix."ch_pago(
 id int NOT NULL AUTO_INCREMENT,
 fecha_alta date,
 fecha_pago date,
+fecha_desde date,
+fecha_hasta date,
 monto decimal(7,2),
 tipo_pago int,
 UNIQUE KEY id (id),
