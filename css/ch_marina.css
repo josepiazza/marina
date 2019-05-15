@@ -19,3 +19,9 @@ input.campo_obligatorio , select.campo_obligatorio{
     float: left;
     width: 200px;
 }
+
+.rojo td{
+    
+    background-color: #a93a32    !important;;
+    color: #FFFFFF !important ;
+}

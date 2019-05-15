@@ -77,4 +77,33 @@ abstract class CHMarinaCore {
     public function getPropiedades(){
         return get_object_vars($this);
     }
+    
+    public function getListadoMeses(){
+        $rta = [
+            [1, "Enero"],
+            [2, "Febrero"],
+            [3, "Marzo"],
+            [4, "Abril"],
+            [5, "Mayo"],
+            [6, "Junio"],
+            [7, "Julio"],
+            [8, "Agosto"],
+            [9, "Septimbre"],
+            [10, "Octubre"],
+            [11, "Noviembre"],
+            [12, "Diciembre"],
+        ];
+        return $rta;
+    }
+    
+    public function geListadoAnios($margen){
+        $y = date("Y");
+//        $y =$y-$margen;
+        $rta = [];
+        for($i=($margen*-1); $i<($margen); $i++ ){
+            $rta[] = $y+$i;
+        }
+        return $rta;
+    }
+
 }

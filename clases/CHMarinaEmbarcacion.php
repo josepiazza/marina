@@ -295,6 +295,10 @@ FIL;
         
     }
     
+    public function getTablaDeuda(){
+        
+    }
+    
     protected function validar_alta(){
         //valido que tenga tipo de embarcacion
         // que la matrícula no exista

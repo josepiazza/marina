@@ -26,6 +26,7 @@ class CHMarinaInicio {
         
         add_menu_page("CH_Marina", "Marina", "publish_pages", "ch_marina_menu_administrador", [$this, "listado_marina" ]);
         add_submenu_page("ch_marina_menu_administrador", "Pagos", "Pagos", "publish_pages", "listado_marina", [$this, "listadoPagos"]);
+        add_submenu_page("ch_marina_menu_administrador", "Generar Cuota", "Generar Cuota", "publish_pages", "generar_cuota", [$this, "generar_cuota"]);
 
 
     }
@@ -122,8 +123,8 @@ class CHMarinaInicio {
     
     public function getListaPagosEmbarcacion(){
         $item = new clases\CHMarinaItem();
-        print $this->cabeceraEmbarcacion(3);
-        print $item->get_tabla_html("3");
+        print $this->cabeceraEmbarcacion($_REQUEST["id"]);
+        print $item->get_tabla_html( ["id"=>$_REQUEST["id"]] );
     }
     
     public function correrTest(){
@@ -402,7 +403,7 @@ class CHMarinaInicio {
         
         wp_enqueue_style( 'ch_marina_css', plugins_url( 'marina/css/ch_marina.css'),array(), NULL);
         $pago = new CHMarinaPago();
-        $tabla = $pago->get_tabla_html( null );
+        $tabla = $pago->get_tabla_html( ["tipo_pago"=>"is not null"] );
         
         $rta = <<<RTA
  
@@ -422,7 +423,7 @@ RTA;
     }
     
     public function guardarPago(){
-        print_r($_REQUEST);
+//        print_r($_REQUEST);
         
         $pago = new CHMarinaPago();
         $items = $_REQUEST["itemPago"];
@@ -455,9 +456,9 @@ RTA;
         $pago->setTipo_pago($_REQUEST["tipo_pago"]);
         $pago->setIdentificador_pago($_REQUEST["identificador_pago"]);
 //        exit();
-        $pago->guardar();
+        $id = $pago->guardar();
                 
-                
+        $this->getFormularioPago( $id , true);
 //        id_pago] => [tipo_pago] => 1 [datepicker] => 04/29/2019
     }
     
@@ -547,7 +548,7 @@ RTA;
         
        ?>
 <h2>Usuario</h2>
-<form action="?page=ch_marina_menu_administrador&modo=pagos&modoPago=guardarPago" method="post" id="formularioPago">
+<form action="?page=ch_marina_menu_administrador&modo=pagos&modoPago=guardarPago" method="post" id="formularioPago"  onkeypress="return event.keyCode != 13;">
     <!--<input type="hidden" name="id_pago" value="" />-->
             <label for="tipo_pago"><?php _e( 'Tipo de Pago' ) ?></label>
             <br />
@@ -647,5 +648,84 @@ RTA;
     </div>
 <?php
     }
+
+    
+    
+    
+    public function generar_cuota(){
+        
+        print "<h1>Generar Cuota</h1>";
+//         $usuarios = new CHMarinaUsuario();
+//        $lista = $usuarios->get_lista();       
+        switch($_REQUEST["modo"]){
+            
+            
+            default:
+                $this->generadorCuotaListado();
+                $this->generarCuotas();
+            
+        }        
+        
+    }
+
+    public function generadorCuotaListado(){
+        
+        print "gerando";
+        $core = new CHMarinaPago();
+        $meses = $core->getListadoMeses();
+        $anios = $core->geListadoAnios(2);
+        $anioActual = date("Y");
+        $mesActual =  date("n");
+        $selectAnio = "";
+        $selectMes = "";
+        foreach($meses as $mes){
+            $selectMes .= "<option value='{$mes[0]}'>{$mes[1]}</option>";
+        }
+        foreach($anios as $anio){
+            $selectAnio .= "<option>$anio</option>";
+        }
+        $m = $core->getListadoMeses();
+        
+        $html = <<<HTML
+                $mesActual
+            <form action="?page=generar_cuota" method="post">
+                Año: <select id="anio" name="anio">
+                    <option value="">Seleccionar</option>
+                    $selectAnio
+                </select>
+                
+                Mes: <select id="mes" name="mes">
+                    <option value="">Seleccionar</option>
+                    $selectMes
+                </select>
+                <button >Generar/listar</button>
+            </form>
+<script>
+    jQuery("#anio").val("$anioActual");
+    jQuery("#mes").val("$mesActual");
+</script>
+                
+HTML;
+        print $html;
+    }
+    
+    public function generarCuotas(){
+        
+        if( !empty( $_POST ) ){
+            print "<hr/>";
+            $pago = new CHMarinaPago();
+            $pago->crearCuotas($_REQUEST["mes"], $_REQUEST["anio"]);
+            
+            
+            $item = new clases\CHMarinaItem();
+            $filtro = [
+                "tipo_pago"=>"is null",
+                "month( p.fecha_hasta )" => $_REQUEST["mes"], 
+                "year( p.fecha_hasta )" => $_REQUEST["anio"]
+            ];
+            print $item->get_tabla_html( $filtro );
+        }
+    }
+    
 }
 

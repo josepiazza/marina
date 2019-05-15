@@ -104,10 +104,25 @@ class CHMarinaPago extends CHMarinaCore {
         return $rs;
     }
     
-    public function get_lista($filtro, $pagina = 1) {
+    public function get_lista($filtro=[], $pagina = 1) {
         global $wpdb;
+        $where = " WHERE 1=1 ";
+        foreach($filtro as $k=>$w){
+            switch( $k ){
+            case "tipo_pago":
+                if( is_numeric( $w ) ){
+                    $where .= " AND tipo_pago = $w";
+                }else{
+                    $where .= " AND tipo_pago $w ";
+                }
+                
+                break;
+            default:
+                $where .= " AND $k = $w";
+            }
+        }
         
-        $sql = "SELECT * FROM ".$wpdb->prefix."ch_pago ORDER BY fecha_alta DESC";
+        $sql = "SELECT * FROM ".$wpdb->prefix."ch_pago $where ORDER BY fecha_alta DESC";
 //        as p
 //                INNER JOIN ".$wpdb->prefix."ch_pago_x_embarcacion as i ON p.id = i.id_pago
 //                INNER JOIN ".$wpdb->prefix."ch_precio_embarcacion as m ON m.id = i.id_precio
@@ -121,7 +136,7 @@ class CHMarinaPago extends CHMarinaCore {
     }
 
     protected function get_tabla() {
-        global $wpdb;
+        
         return "ch_pago";
     }
 
@@ -194,7 +209,45 @@ class CHMarinaPago extends CHMarinaCore {
 //
 //        if( !empty( $this->estado  ) ){ $this->cambiarEstado( $this->estado ); };
 //        
-//        return $this->id;
+        return $this->id;
+    }
+    
+        
+    public function crearCuotas($mes,$anio){
+        global $wpdb;
+        $sql = "SELECT e.id, m.precio
+                FROM ".$wpdb->prefix."ch_embarcaciones e 
+                INNER JOIN ".$wpdb->prefix."ch_embarcacion_estado ee ON e.id = ee.id_embarcacion AND ee.fecha_hasta is null
+                INNER JOIN ".$wpdb->prefix."ch_precio_embarcacion as m  ON e.id = m.id_embarcacion
+                LEFT JOIN (".$wpdb->prefix."ch_pago_x_embarcacion as i 
+                INNER JOIN ".$wpdb->prefix."ch_pago as p ON p.id = i.id_pago ) ON m.id = i.id_precio
+                AND month( p.fecha_hasta ) = $mes AND year( p.fecha_hasta ) = $anio
+                WHERE m.hasta is null AND p.fecha_hasta is null";
+        $lista = $wpdb->get_results( $sql );
+        
+        $my_date = new \DateTime();
+        $nmes = date("F", strtotime($anio."/".$mes."/1") );
+
+        $my_date->modify('first day of '.$nmes.' '.$_REQUEST["anio"]);
+        $primerDia = $my_date->format('Y/m/d');
+
+        $my_date->modify('last day of '.$nmes.' '.$_REQUEST["anio"]);
+        $ultimoDia = $my_date->format('Y/m/d');
+        
+        foreach($lista as $item){
+            $this->generarDeuda($item->id, $item->precio, $primerDia, $ultimoDia);
+        }
+    }
+    
+    private function generarDeuda($idEmbarcacion, $monto, $primerDia, $ultimoDia){
+        $pago = new CHMarinaPago();
+        $pago->agregarItem( json_decode('{"id": '.$idEmbarcacion.', "monto":'.$monto.'}') );
+        $pago->setFecha_desde($primerDia);
+        $pago->setFecha_hasta($ultimoDia);
+        $pago->setFecha_alta(date("Y-m-d"));
+        $pago->setFecha_pago( $primerDia );
+        $pago->setMonto($monto);
+        $id = $pago->guardar();
     }
     
 }

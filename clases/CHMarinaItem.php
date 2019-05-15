@@ -17,13 +17,33 @@ class CHMarinaItem extends CHMarinaCore{
 
     public function get_lista($filtro, $pagina = 1) {
         global $wpdb;
+        
+        $where = "";
+        foreach($filtro as $k=>$w){
+            switch( $k ){
+            case "id":
+                $where .= " AND e.id = $w";
+                break;
+            case "tipo_pago":
+                if( is_numeric( $w ) ){
+                    $where .= " AND p.tipo_pago = $w";
+                }else{
+                    $where .= " AND p.tipo_pago $w ";
+                }
+                
+                break;
+            default:
+                $where .= " AND $k = $w";
+            }
+        }
+        
         $sql = "SELECT p.fecha_pago, i.importe, tp.descripcion FROM ".$wpdb->prefix."ch_pago p
                 INNER JOIN ".$wpdb->prefix."ch_pago_x_embarcacion i ON p.id = i.id_pago
                 INNER JOIN ".$wpdb->prefix."ch_precio_embarcacion as m ON m.id = i.id_precio
                 INNER JOIN ".$wpdb->prefix."ch_embarcaciones e ON e.id = m.id_embarcacion
-                INNER JOIN ".$wpdb->prefix."ch_tipo_pago tp ON tp.id = p.tipo_pago
-                WHERE e.id= $filtro";
-//        print $sql;
+                LEFT JOIN ".$wpdb->prefix."ch_tipo_pago tp ON tp.id = p.tipo_pago
+                WHERE 1=1 $where";
+        print $sql;
         $rta = $wpdb->get_results($sql);
         return $rta;
     }
@@ -34,7 +54,13 @@ class CHMarinaItem extends CHMarinaCore{
         $campoid= $this->get_campo_id();
         $rta = "<table class='wp-list-table widefat fixed striped posts'><tbody id='the-list'>";
         foreach( $lista as $row ){ 
-            $rta .= "<tr>";
+            if( empty($row->descripcion) ){
+                $class = "class='rojo'";
+                $row->descripcion = "Impago";
+            }else{
+                $class = "";
+            }
+            $rta .= "<tr $class>";
             foreach( $row as $k => $campo ){
                 if( $k != $this->get_campo_id() ){
                     $rta .= "<td>  ".$campo."</td>";
