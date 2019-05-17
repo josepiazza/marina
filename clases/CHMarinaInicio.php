@@ -674,7 +674,7 @@ RTA;
 
     public function generadorCuotaListado(){
         
-        print "gerando";
+
         $core = new CHMarinaPago();
         $meses = $core->getListadoMeses();
         $anios = $core->geListadoAnios(2);
@@ -691,7 +691,7 @@ RTA;
         $m = $core->getListadoMeses();
         
         $html = <<<HTML
-                $mesActual
+                
             <form action="?page=generar_cuota" method="post">
                 Año: <select id="anio" name="anio">
                     <option value="">Seleccionar</option>
