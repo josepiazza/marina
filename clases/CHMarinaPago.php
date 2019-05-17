@@ -220,9 +220,9 @@ class CHMarinaPago extends CHMarinaCore {
                 $datoItem["id_precio"] = $rta[0]->id;
                 $datoItem["importe"] = $itemPago->monto;
                 $wpdb->insert($wpdb->prefix."ch_pago_x_embarcacion", $datoItem, ["%d","%d","%d"]);
-                
-                $this->borrarDeuda($itemPago->id, $mesPago, $anioPago);
-               
+                if( strlen($this->tipo_pago) > 0 ){
+                    $this->borrarDeuda($itemPago->id, $mesPago, $anioPago);
+                }
             }
             
             
@@ -245,6 +245,7 @@ class CHMarinaPago extends CHMarinaCore {
                 INNER JOIN ".$wpdb->prefix."ch_pago as p ON p.id = i.id_pago ) ON m.id = i.id_precio
                 AND month( p.fecha_hasta ) = $mes AND year( p.fecha_hasta ) = $anio
                 WHERE m.hasta is null AND p.fecha_hasta is null";
+
         $lista = $wpdb->get_results( $sql );
         
         $my_date = new \DateTime();
@@ -283,7 +284,7 @@ class CHMarinaPago extends CHMarinaCore {
                 AND month( p.fecha_hasta ) = $mes
                 AND year( p.fecha_hasta ) = $anio
                 AND e.id = $idEmbarcacion ";
-        
+//        print "borrando  $idEmbarcacion, $mes, $anio => ".$this->tipo_pago;
         $lista = $wpdb->get_results( $sql );
         
         $wpdb->delete($wpdb->prefix."ch_pago_x_embarcacion", [ "id_pago"=>$lista[0]->idPago ]);
