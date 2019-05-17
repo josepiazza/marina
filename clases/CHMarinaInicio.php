@@ -458,6 +458,10 @@ RTA;
 //        exit();
         $id = $pago->guardar();
                 
+
+        print "<h1>".$this->fecha_desde." => $mesPago  $anioPago</h1>";
+        
+        
         $this->getFormularioPago( $id , true);
 //        id_pago] => [tipo_pago] => 1 [datepicker] => 04/29/2019
     }

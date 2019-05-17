@@ -122,7 +122,7 @@ class CHMarinaPago extends CHMarinaCore {
             }
         }
         
-        $sql = "SELECT * FROM ".$wpdb->prefix."ch_pago $where ORDER BY fecha_alta DESC";
+        $sql = "SELECT * FROM ".$wpdb->prefix."ch_pago $where ORDER BY fecha_desde DESC";
 //        as p
 //                INNER JOIN ".$wpdb->prefix."ch_pago_x_embarcacion as i ON p.id = i.id_pago
 //                INNER JOIN ".$wpdb->prefix."ch_precio_embarcacion as m ON m.id = i.id_precio
@@ -144,12 +144,27 @@ class CHMarinaPago extends CHMarinaCore {
         $lista = $this->get_lista($filtro, $pagina = 1);
 
         $campoid= $this->get_campo_id();
-        $rta = "<table class='wp-list-table widefat fixed striped posts'><tbody id='the-list'>";
+        $rta = "<table class='wp-list-table widefat fixed striped posts'>"
+                . "<thead>"
+                . "<tr><td>Alta Pago</td>  <td>Fecha del pago</td>  <td>Importe</td>  <td>Medio Pago</td>  <td>Valido Desde</td>  <td>Valido Hasta</td> <td></td></tr>"
+                . "</thead>"
+                . "<tbody id='the-list'>";
         foreach( $lista as $row ){ 
             $rta .= "<tr>";
             foreach( $row as $k => $campo ){
                 if( $k != $this->get_campo_id() ){
-                    $rta .= "<td>  ".$campo."</td>";
+                    switch ($k){
+                        case "fecha_alta":
+                        case "fecha_pago":
+                        case "fecha_desde":
+                        case "fecha_hasta":
+                            $mostrar = date("d/m/Y", strtotime( $campo ));
+                            $rta .= "<td>  ".$mostrar."</td>";
+                            break;
+                        default:
+                            $rta .= "<td>  ".$campo."</td>";
+                    }
+                    
                 }
             }  
             
@@ -195,6 +210,8 @@ class CHMarinaPago extends CHMarinaCore {
 //        }else{
             $wpdb->insert($wpdb->prefix.$this->get_tabla(), $datos, $format);
             $this->id = $wpdb->insert_id;
+            $mesPago = date("m", strtotime( $this->fecha_desde ));
+            $anioPago = date("Y", strtotime( $this->fecha_desde ));
             foreach( $this->items as $itemPago ){
                 $sql = "SELECT id FROM ".$wpdb->prefix."ch_precio_embarcacion WHERE id_embarcacion = ".$itemPago->id." and hasta is null";
                 $rta = $wpdb->get_results( $sql );
@@ -203,7 +220,12 @@ class CHMarinaPago extends CHMarinaCore {
                 $datoItem["id_precio"] = $rta[0]->id;
                 $datoItem["importe"] = $itemPago->monto;
                 $wpdb->insert($wpdb->prefix."ch_pago_x_embarcacion", $datoItem, ["%d","%d","%d"]);
+                
+                $this->borrarDeuda($itemPago->id, $mesPago, $anioPago);
+               
             }
+            
+            
             
 //        }
 //
@@ -248,6 +270,24 @@ class CHMarinaPago extends CHMarinaCore {
         $pago->setFecha_pago( $primerDia );
         $pago->setMonto($monto);
         $id = $pago->guardar();
+    }
+    
+    private function borrarDeuda( $idEmbarcacion, $mes, $anio ){
+        global $wpdb;
+        $sql = "SELECT e.id as idEbarcacion, p.id as idPago
+                FROM ".$wpdb->prefix."ch_pago p 
+                INNER JOIN ".$wpdb->prefix."ch_pago_x_embarcacion i ON p.id = i.id_pago 
+                INNER JOIN ".$wpdb->prefix."ch_precio_embarcacion as m ON m.id = i.id_precio 
+                INNER JOIN ".$wpdb->prefix."ch_embarcaciones e ON e.id = m.id_embarcacion 
+                WHERE p.tipo_pago is null 
+                AND month( p.fecha_hasta ) = $mes
+                AND year( p.fecha_hasta ) = $anio
+                AND e.id = $idEmbarcacion ";
+        
+        $lista = $wpdb->get_results( $sql );
+        
+        $wpdb->delete($wpdb->prefix."ch_pago_x_embarcacion", [ "id_pago"=>$lista[0]->idPago ]);
+        $wpdb->delete($wpdb->prefix."ch_pago", ["id"=>$lista[0]->idPago ] );
     }
     
 }
