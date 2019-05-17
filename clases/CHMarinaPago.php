@@ -64,9 +64,9 @@ class CHMarinaPago extends CHMarinaCore {
     public function getItems() {
         global $wpdb;
         
-        $sql = "SELECT e.nombre, i.importe FROM ".$wpdb->prefix."_ch_pago_x_embarcacion i
-                INNER JOIN ".$wpdb->prefix."_ch_precio_embarcacion as m ON m.id = i.id_precio
-                INNER JOIN ".$wpdb->prefix."_ch_embarcaciones e ON e.id = m.id_embarcacion
+        $sql = "SELECT e.nombre, i.importe FROM ".$wpdb->prefix."ch_pago_x_embarcacion i
+                INNER JOIN ".$wpdb->prefix."ch_precio_embarcacion as m ON m.id = i.id_precio
+                INNER JOIN ".$wpdb->prefix."ch_embarcaciones e ON e.id = m.id_embarcacion
                 WHERE i.id_pago = ".$this->id;
         
         return $wpdb->get_results( $sql );
