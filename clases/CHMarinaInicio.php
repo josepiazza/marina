@@ -10,6 +10,7 @@ use ch_marina\marina\clases\CHMarinaEmbarcacion;
 use ch_marina\marina\clases\CHMarinaUsuario;
 use ch_marina\marina\clases\CHMarinaPago;
 
+
 class CHMarinaInicio {
     
     public function __construct() {
@@ -27,6 +28,7 @@ class CHMarinaInicio {
         add_menu_page("CH_Marina", "Marina", "publish_pages", "ch_marina_menu_administrador", [$this, "listado_marina" ]);
         add_submenu_page("ch_marina_menu_administrador", "Pagos", "Pagos", "publish_pages", "listado_marina", [$this, "listadoPagos"]);
         add_submenu_page("ch_marina_menu_administrador", "Generar Cuota", "Generar Cuota", "publish_pages", "generar_cuota", [$this, "generar_cuota"]);
+        add_submenu_page("ch_marina_menu_administrador", "Test", "test", "manage_options", "generar_test", [$this, "enviarEmail"]);
 
 
     }
@@ -62,6 +64,7 @@ class CHMarinaInicio {
     
     public function listado_marina(){
         print "<h1>Marina</h1>";
+
 //         $usuarios = new CHMarinaUsuario();
 //        $lista = $usuarios->get_lista();       
         switch($_REQUEST["modo"]){
@@ -730,6 +733,48 @@ HTML;
             print $item->get_tabla_html( $filtro );
         }
     }
-    
+
+    public function enviarEmail(){
+        
+//        $to =  "josepiazza2002@yahoo.com.ar" ;
+//        $subject = "Deuda amarra";
+//        $message = "Mensaje de prueba".time();
+//        $headers[]= "From: Marina Sauce <administracion@marinasauce.com";
+//        $rta = wp_mail( $to, $subject, $message, $headers );
+////        $rta = mail( $to, $subject, $message);
+//        if( $rta == true ){
+//            print "<h1>Email enviado</h1>";
+//        }else{
+//            print "<h1>Email No envio nada de nada: $rta</h1>";
+//        }
+        
+        try{
+            $phpmailer =new \PHPMailer();
+            $phpmailer->isSMTP(); 
+            $phpmailer->Host = 'cr1.toservers.com';
+            $phpmailer->SMTPAuth = true;
+            $phpmailer->Port = 465;
+            $phpmailer->Username = 'administracion@marinasauce.com';
+            $phpmailer->Password = 'yl181998';
+            $phpmailer->SMTPSecure = false;
+            $phpmailer->From = 'administracion@marinasauce.com';
+            $phpmailer->FromName='Marina Sauce';
+
+            $phpmailer->addAddress("josepiazza2002@yahoo.com.ar");
+            $phpmailer->Subject ="ddddd";
+            $phpmailer->Body = "Evniado desde marina sauce";
+            $phpmailer->isHTML(true);
+            $rta = $phpmailer->send();
+            
+            if( $rta == true ){
+                print "<h1>Email enviado</h1>";
+            }else{
+                print "<h1>Email No envio nada de nada: $rta</h1>";
+            }
+            
+        }catch( Exception $e){
+            print "erro";
+        }
+    }
 }
 

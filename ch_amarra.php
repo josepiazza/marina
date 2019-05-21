@@ -122,3 +122,11 @@ function cargarDatosIniciales(){
 }
 
 register_activation_hook( __FILE__, 'crearEstructuraDeDatos' );
+
+
+//
+//add_action( 'phpmailer_init', 'configuracion_smtp' );
+//function configuracion_smtp( PHPMailer $phpmailer ){
+//    print "<h1>configurando</h1>";
+//
+//}
