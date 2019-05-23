@@ -28,7 +28,7 @@ class CHMarinaInicio {
         add_menu_page("CH_Marina", "Marina", "publish_pages", "ch_marina_menu_administrador", [$this, "listado_marina" ]);
         add_submenu_page("ch_marina_menu_administrador", "Pagos", "Pagos", "publish_pages", "listado_marina", [$this, "listadoPagos"]);
         add_submenu_page("ch_marina_menu_administrador", "Generar Cuota", "Generar Cuota", "publish_pages", "generar_cuota", [$this, "generar_cuota"]);
-        add_submenu_page("ch_marina_menu_administrador", "Test", "test", "manage_options", "generar_test", [$this, "enviarEmail"]);
+//        add_submenu_page("ch_marina_menu_administrador", "Test", "test", "manage_options", "enviarAlertas", [$this, "enviarAlertas"]);
 
 
     }
@@ -435,8 +435,6 @@ RTA;
             $itemPago = str_replace("\\", "",  $itemPago) ;
             $itemPago = json_decode($itemPago);
             
-            var_dump($itemPago);
-            
             $monto += $itemPago->monto;
             $pago->agregarItem($itemPago);
         }
@@ -457,12 +455,11 @@ RTA;
         $pago->setFecha_pago( $fechaPago );
         $pago->setMonto($monto);
         $pago->setTipo_pago($_REQUEST["tipo_pago"]);
-        $pago->setIdentificador_pago($_REQUEST["identificador_pago"]);
+        if( !empty( $_REQUEST["identificador_pago"] ) ){ $pago->setIdentificador_pago($_REQUEST["identificador_pago"]); }
 //        exit();
         $id = $pago->guardar();
                 
 
-        print "<h1>".$this->fecha_desde." => $mesPago  $anioPago</h1>";
         
         
         $this->getFormularioPago( $id , true);
@@ -666,7 +663,9 @@ RTA;
 //        $lista = $usuarios->get_lista();       
         switch($_REQUEST["modo"]){
             
-            
+            case "alertas":
+                $this->enviarAlertas();
+                break;
             default:
                 $this->generadorCuotaListado();
                 $this->generarCuotas();
@@ -681,8 +680,8 @@ RTA;
         $core = new CHMarinaPago();
         $meses = $core->getListadoMeses();
         $anios = $core->geListadoAnios(2);
-        $anioActual = date("Y");
-        $mesActual =  date("n");
+        $anioActual = (isset($_REQUEST["anio"]))?$_REQUEST["anio"]:date("Y");
+        $mesActual =  (isset($_REQUEST["mes"]))?$_REQUEST["mes"]:date("n");
         $selectAnio = "";
         $selectMes = "";
         foreach($meses as $mes){
@@ -710,6 +709,11 @@ RTA;
 <script>
     jQuery("#anio").val("$anioActual");
     jQuery("#mes").val("$mesActual");
+                
+    var enviarEmails = function(){
+        document.location='?page=generar_cuota&modo=alertas&mes=$mesActual&anio=$anioActual';
+    }
+                
 </script>
                 
 HTML;
@@ -730,51 +734,59 @@ HTML;
                 "month( p.fecha_hasta )" => $_REQUEST["mes"], 
                 "year( p.fecha_hasta )" => $_REQUEST["anio"]
             ];
+            print "<button onClick='enviarEmails()'>Enviar detalle a los socios</button>";
             print $item->get_tabla_html( $filtro );
         }
     }
 
-    public function enviarEmail(){
-        
-//        $to =  "josepiazza2002@yahoo.com.ar" ;
-//        $subject = "Deuda amarra";
-//        $message = "Mensaje de prueba".time();
-//        $headers[]= "From: Marina Sauce <administracion@marinasauce.com";
-//        $rta = wp_mail( $to, $subject, $message, $headers );
-////        $rta = mail( $to, $subject, $message);
-//        if( $rta == true ){
-//            print "<h1>Email enviado</h1>";
-//        }else{
-//            print "<h1>Email No envio nada de nada: $rta</h1>";
-//        }
-        
+    public function enviarAlertas(){
+        print "<h1>Alertas enviadas por deuda.</h1>";
+        $mes = $_REQUEST["mes"];
+        $anio = $_REQUEST["anio"];
+        $item = new clases\CHMarinaItem();
+        $filtro = [
+            "tipo_pago"=>"is null",
+            "month( p.fecha_hasta )" => $mes, 
+            "year( p.fecha_hasta )" => $anio
+        ];
+        $lista = $item->get_lista($filtro);
         try{
-            $phpmailer =new \PHPMailer();
-            $phpmailer->isSMTP(); 
-            $phpmailer->Host = 'cr1.toservers.com';
-            $phpmailer->SMTPAuth = true;
-            $phpmailer->Port = 465;
-            $phpmailer->Username = 'administracion@marinasauce.com';
-            $phpmailer->Password = 'yl181998';
-            $phpmailer->SMTPSecure = false;
-            $phpmailer->From = 'administracion@marinasauce.com';
-            $phpmailer->FromName='Marina Sauce';
-
-            $phpmailer->addAddress("josepiazza2002@yahoo.com.ar");
-            $phpmailer->Subject ="ddddd";
-            $phpmailer->Body = "Evniado desde marina sauce";
+            $phpmailer =new \PHPMailer();            
             $phpmailer->isHTML(true);
-            $rta = $phpmailer->send();
-            
-            if( $rta == true ){
-                print "<h1>Email enviado</h1>";
-            }else{
-                print "<h1>Email No envio nada de nada: $rta</h1>";
+            foreach( $lista as $item ){
+                $this->enviarMailEmbarcacion( $item->idEmbarcacion );
             }
-            
         }catch( Exception $e){
             print "erro";
         }
     }
+    
+    private function enviarMailEmbarcacion($idEmbarcacion){
+        $embacacion = new CHMarinaEmbarcacion();
+        
+
+        $embacacion->inicializar($idEmbarcacion);
+        $lista = $embacacion->getListaUsuarios();
+        $subject = "Detalle de deuda Marina Sauce";
+        foreach($lista as $u){
+            $user = get_userdata($u->id_user);
+            $to = $user->user_email;//"josepiazza2002@yahoo.com.ar";
+//            if( !empty( $to ) ){
+//                $to = "josepiazza2002@yahoo.com.ar";
+                $body = "<b>".$user->first_name." ".$user->last_name."</b>: a continucación se detalla la deuda para la embarcación ".$embacacion->getNombre()."<br/><br/>";
+
+                print "<div>Mail enviado a ".$user->first_name." ".$user->last_name." para la embarcación ".$embacacion->getNombre()."<br/></div>";
+
+                $pago = new clases\CHMarinaItem();
+                $tabla = $pago->get_tabla_html( ["id"=>$idEmbarcacion, "tipo_pago"=>"is null"] );
+                $body.=$tabla;
+                wp_mail( $to, $subject, $body);
+
+//            }
+        }
+    }
+    
+    
 }
+
 

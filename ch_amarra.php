@@ -124,9 +124,19 @@ function cargarDatosIniciales(){
 register_activation_hook( __FILE__, 'crearEstructuraDeDatos' );
 
 
-//
-//add_action( 'phpmailer_init', 'configuracion_smtp' );
-//function configuracion_smtp( PHPMailer $phpmailer ){
-//    print "<h1>configurando</h1>";
-//
-//}
+
+add_action( 'phpmailer_init', 'configuracion_smtp' );
+function configuracion_smtp( PHPMailer $phpmailer ){
+            $phpmailer->isSMTP(); 
+//            $phpmailer->SMTPDebug = 3;
+            $phpmailer->Host = 'cr1.toservers.com';
+            $phpmailer->SMTPAuth = true;
+            $phpmailer->Port = 465;
+            $phpmailer->Username = 'administracion@marinasauce.com';
+            $phpmailer->Password = 'yl181998';
+            $phpmailer->SMTPSecure = true;
+            $phpmailer->From = 'administracion@marinasauce.com';
+            $phpmailer->FromName='Marina Sauce';
+            $phpmailer->SMTPKeepAlive = true;
+            $phpmailer->isHTML(true);
+}

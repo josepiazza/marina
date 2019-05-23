@@ -37,7 +37,7 @@ class CHMarinaItem extends CHMarinaCore{
             }
         }
         
-        $sql = "SELECT e.nombre, p.fecha_pago, month( p.fecha_desde ) as mes, i.importe, tp.descripcion FROM ".$wpdb->prefix."ch_pago p
+        $sql = "SELECT e.nombre, p.fecha_pago, month( p.fecha_desde ) as mes, i.importe, tp.descripcion, e.id as idEmbarcacion FROM ".$wpdb->prefix."ch_pago p
                 INNER JOIN ".$wpdb->prefix."ch_pago_x_embarcacion i ON p.id = i.id_pago
                 INNER JOIN ".$wpdb->prefix."ch_precio_embarcacion as m ON m.id = i.id_precio
                 INNER JOIN ".$wpdb->prefix."ch_embarcaciones e ON e.id = m.id_embarcacion
@@ -46,6 +46,7 @@ class CHMarinaItem extends CHMarinaCore{
                 ORDER BY p.fecha_desde DESC";
 //        print $sql;
         $rta = $wpdb->get_results($sql);
+//        var_dump($rta);
         return $rta;
     }
 
@@ -69,6 +70,8 @@ class CHMarinaItem extends CHMarinaCore{
             foreach( $row as $k => $campo ){
                 if( $k != $this->get_campo_id() ){
                     switch ($k){
+                        case "idEmbarcacion":
+                            break;
                         case "mes":
                             $meses = $this->getListadoMeses();
                             $rta .= "<td>  ".$meses[ $campo-1 ][1]."</td>";

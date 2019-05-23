@@ -285,6 +285,7 @@ class CHMarinaPago extends CHMarinaCore {
                 AND year( p.fecha_hasta ) = $anio
                 AND e.id = $idEmbarcacion ";
 //        print "borrando  $idEmbarcacion, $mes, $anio => ".$this->tipo_pago;
+//        print $sql;
         $lista = $wpdb->get_results( $sql );
         
         $wpdb->delete($wpdb->prefix."ch_pago_x_embarcacion", [ "id_pago"=>$lista[0]->idPago ]);
