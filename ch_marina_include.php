@@ -8,6 +8,9 @@ require __DIR__.'/clases/CHMarinaUsuario.php';
 require __DIR__.'/clases/CHMarinaPago.php';
 require __DIR__.'/clases/CHMarinaItem.php';
 
+require __DIR__.'/clases/CHMarinaPagoCorteMensual.php';
+
 require __DIR__.'/../../../wp-includes/class-phpmailer.php';
+
 
 

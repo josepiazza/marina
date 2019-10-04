@@ -33,9 +33,10 @@ abstract class CHMarinaCore {
                     $rta .= "<td>  ".$campo."</td>";
                 }
             }  
-            
-        $rta .= "<td style='width:80px'><a href='?page=ch_marina_menu_administrador&modo=edit&tbl=".$this->get_option_editar()."&id=".$row->$campoid."'>Editar </a></td>";
-
+        $optionEditar = $this->get_option_editar();    
+        if(!empty($optionEditar) ){
+            $rta .= "<td style='width:80px'><a href='?page=ch_marina_menu_administrador&modo=edit&tbl=".$this->get_option_editar()."&id=".$row->$campoid."'>Editar </a></td>";
+        }
         if( !empty($tdExtra) ){
             foreach( $tdExtra as $td ){
                 $td = str_replace("%id", $row->$campoid, $td);

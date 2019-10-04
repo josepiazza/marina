@@ -9,6 +9,7 @@ namespace ch_marina\marina;
 use ch_marina\marina\clases\CHMarinaEmbarcacion;
 use ch_marina\marina\clases\CHMarinaUsuario;
 use ch_marina\marina\clases\CHMarinaPago;
+use ch_marina\marina\clases\CHMarinaPagoCorteMensual;
 
 
 class CHMarinaInicio {
@@ -30,6 +31,7 @@ class CHMarinaInicio {
         add_submenu_page("ch_marina_menu_administrador", "Generar Cuota", "Generar Cuota", "publish_pages", "generar_cuota", [$this, "generar_cuota"]);
 //        add_submenu_page("ch_marina_menu_administrador", "Test", "test", "manage_options", "enviarAlertas", [$this, "enviarAlertas"]);
 
+        add_submenu_page("ch_marina_menu_administrador", "Resumen", "Resumen", "publish_pages", "resumen_marina", [$this, "resumenPagos"]);
 
     }
   
@@ -406,7 +408,7 @@ class CHMarinaInicio {
         
         wp_enqueue_style( 'ch_marina_css', plugins_url( 'marina/css/ch_marina.css'),array(), NULL);
         $pago = new CHMarinaPago();
-        $tabla = $pago->get_tabla_html( ["tipo_pago"=>"is not null"] );
+        $tabla = $pago->get_tabla_html( ["tipo_pago"=>"is not null", "baja"=>"is null"] );
         
         $rta = <<<RTA
  
@@ -731,8 +733,8 @@ HTML;
             $item = new clases\CHMarinaItem();
             $filtro = [
                 "tipo_pago"=>"is null",
-                "month( p.fecha_hasta )" => $_REQUEST["mes"], 
-                "year( p.fecha_hasta )" => $_REQUEST["anio"]
+                "month( p.fecha_desde )" => $_REQUEST["mes"], 
+                "year( p.fecha_desde )" => $_REQUEST["anio"]
             ];
             print "<button onClick='enviarEmails()'>Enviar detalle a los socios</button>";
             print $item->get_tabla_html( $filtro );
@@ -746,6 +748,7 @@ HTML;
         $item = new clases\CHMarinaItem();
         $filtro = [
             "tipo_pago"=>"is null",
+            "baja"=>"is null",
             "month( p.fecha_hasta )" => $mes, 
             "year( p.fecha_hasta )" => $anio
         ];
@@ -786,7 +789,14 @@ HTML;
         }
     }
     
+
+
+
+public function resumenPagos(){
+    print "<h1>Resumen mensual</h1>";
+    $resumen = new CHMarinaPagoCorteMensual();
+    $table= $resumen->get_tabla_html(null);
+    print $table;
+}
     
 }
-
-

@@ -74,6 +74,8 @@ fecha_desde date,
 fecha_hasta date,
 monto decimal(7,2),
 tipo_pago int,
+baja text,
+identificador_pago varchar(250),
 UNIQUE KEY id (id),
 FOREIGN KEY (tipo_pago) REFERENCES ".$wpdb->prefix."ch_tipo_pago(id) ON DELETE RESTRICT
 );";

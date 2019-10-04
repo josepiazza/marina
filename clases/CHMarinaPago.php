@@ -110,10 +110,13 @@ class CHMarinaPago extends CHMarinaCore {
         foreach($filtro as $k=>$w){
             switch( $k ){
             case "tipo_pago":
+            case "baja":
                 if( is_numeric( $w ) ){
-                    $where .= " AND tipo_pago = $w";
+                    $where .= " AND $k = $w";
+                }else if(is_array($k) ){
+                    $where .= " AND $k $w[0] $w[1]";
                 }else{
-                    $where .= " AND tipo_pago $w ";
+                    $where .= " AND $k $w ";
                 }
                 
                 break;
@@ -237,24 +240,32 @@ class CHMarinaPago extends CHMarinaCore {
         
     public function crearCuotas($mes,$anio){
         global $wpdb;
+        if($mes == 12){
+            $anioHasta = $anio+1;
+            $mesHasta = 1;
+        }else{
+            $anioHasta = $anio;
+            $mesHasta = $mes+1;
+        }
         $sql = "SELECT e.id, m.precio
                 FROM ".$wpdb->prefix."ch_embarcaciones e 
                 INNER JOIN ".$wpdb->prefix."ch_embarcacion_estado ee ON e.id = ee.id_embarcacion AND ee.fecha_hasta is null
                 INNER JOIN ".$wpdb->prefix."ch_precio_embarcacion as m  ON e.id = m.id_embarcacion
                 LEFT JOIN (".$wpdb->prefix."ch_pago_x_embarcacion as i 
                 INNER JOIN ".$wpdb->prefix."ch_pago as p ON p.id = i.id_pago ) ON m.id = i.id_precio
-                AND month( p.fecha_hasta ) = $mes AND year( p.fecha_hasta ) = $anio
+                AND month( p.fecha_hasta ) = $mesHasta  AND year( p.fecha_hasta ) = $anioHasta
                 WHERE m.hasta is null AND p.fecha_hasta is null";
 
         $lista = $wpdb->get_results( $sql );
         
-        $my_date = new \DateTime();
-        $nmes = date("F", strtotime($anio."/".$mes."/1") );
+        $my_date = new \DateTime(  );
+        $nmes = date("F", strtotime($anio."/".$mes."/10") );
 
         $my_date->modify('first day of '.$nmes.' '.$_REQUEST["anio"]);
+        $my_date->modify("+9 days");
         $primerDia = $my_date->format('Y/m/d');
 
-        $my_date->modify('last day of '.$nmes.' '.$_REQUEST["anio"]);
+        $my_date->modify('+30 days');
         $ultimoDia = $my_date->format('Y/m/d');
         
         foreach($lista as $item){
@@ -281,8 +292,8 @@ class CHMarinaPago extends CHMarinaCore {
                 INNER JOIN ".$wpdb->prefix."ch_precio_embarcacion as m ON m.id = i.id_precio 
                 INNER JOIN ".$wpdb->prefix."ch_embarcaciones e ON e.id = m.id_embarcacion 
                 WHERE p.tipo_pago is null 
-                AND month( p.fecha_hasta ) = $mes
-                AND year( p.fecha_hasta ) = $anio
+                AND month( p.fecha_desde ) = $mes
+                AND year( p.fecha_desde ) = $anio
                 AND e.id = $idEmbarcacion ";
 //        print "borrando  $idEmbarcacion, $mes, $anio => ".$this->tipo_pago;
 //        print $sql;
